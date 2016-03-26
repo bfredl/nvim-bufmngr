@@ -1,9 +1,9 @@
-function! s:pidpath(pid) abort
+function! s:path(pid) abort
     return  g:bufmngr_dir.'/'.a:pid.'.mpack'
 endfunction
 
-function! bufmngr#write(pid, data) abort
-    call writefile(msgpackdump(a:data), s:pidpath(a:pid), 'b')
+function! bufmngr#write(id, data) abort
+    call writefile(msgpackdump(a:data), s:path(a:id), 'b')
 endfunction
 
 function! bufmngr#local_buflist() abort
@@ -30,7 +30,7 @@ function! bufmngr#update() abort
 endfunction
 
 function! bufmngr#vimleave() abort
-    call delete(s:pidpath(getpid()))
+    call delete(s:path(getpid()))
 endfunction
 
 function! bufmngr#read() abort
@@ -42,7 +42,7 @@ function! bufmngr#read() abort
         if !isdirectory("/proc/".pid)
             continue
         endif
-        let data =  msgpackparse(readfile(f, 'b'))
+        let data = msgpackparse(readfile(f, 'b'))
         let instances[str2nr(pid)] = data
     endfor
     return instances
@@ -65,3 +65,40 @@ function! bufmngr#buflist() abort
     return buffers
 endfunction
 
+function! bufmngr#activate(buf) abort
+    let islocal = a:buf.pid == getpid()
+    if !islocal
+        if a:buf.windowid != -1
+            call system(['wmctrl', '-i', '-a', a:buf.windowid])
+        endif
+        " TODO: rpc!
+        call bufmngr#write('activate', [a:buf])
+    else
+        call bufmngr#activate_local(a:buf.nr, 1)
+    end
+endfunction
+
+" split = 0 open in this window
+" split = 1 jump to window, otherwise open in this window
+" split = 2 jump to window or new split
+function! bufmngr#activate_local(bufnr, split) abort
+    let win = bufwinnr(a:bufnr)
+    if bufnr(".") == a:bufnr
+        return 1
+    elseif win != -1 && a:split > 0
+        execute win.'wincmd w'
+    else
+        if a:split > 1
+            split
+        endif
+        execute 'b'.a:bufnr
+    endif
+endfunction
+
+
+function! bufmngr#receive(split) abort
+    let [buf] = msgpackparse(readfile(s:path('activate'), 'b'))
+    if buf.pid == getpid()
+        call bufmngr#activate_local(buf.nr, a:split)
+    end
+endfunction

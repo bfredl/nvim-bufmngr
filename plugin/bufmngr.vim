@@ -28,3 +28,4 @@ augroup Bufmngr
     au VimLeave * call bufmngr#vimleave()
 augroup END
 
+nnoremap <Plug>(bufmngr-receive) :<c-u>call bufmngr#receive(1)<cr>
