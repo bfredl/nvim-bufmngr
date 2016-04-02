@@ -39,4 +39,5 @@ else:
     nvim.options["titlestring"] = "SWITCHER"
     call(['wmctrl', '-i', '-r', windowid, '-b', 'add,sticky'])
 
-nvim.command("Unite -buffer-name=switcher -no-split -start-insert bufmngr window/gui")
+nvim.command("Unite -buffer-name=switcher -no-split bufmngr window/gui")
+nvim.api.input("i")
