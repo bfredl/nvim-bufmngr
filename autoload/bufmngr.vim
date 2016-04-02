@@ -71,6 +71,11 @@ function! bufmngr#activate(buf) abort
         if a:buf.windowid != -1
             call system(['wmctrl', '-i', '-a', a:buf.windowid])
         endif
+        if g:bufmngr_is_switcher
+            "doesn't work :(
+            "call system(['wmctrl', '-i', '-r', g:bufmngr_windowid, '-b', 'add,hidden'])
+            call system(['xdotool', 'windowminimize', g:bufmngr_windowid])
+        end
         " TODO: rpc!
         call bufmngr#write('activate', [a:buf])
     else

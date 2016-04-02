@@ -22,6 +22,10 @@ else
     let g:bufmngr_windowid = -1
 end
 
+if !has_key(g:,"bufmngr_is_switcher")
+    let g:bufmngr_is_switcher = 0
+end
+
 augroup Bufmngr
     au!
     au BufAdd,BufFilePost,FileType,BufDelete  * call bufmngr#update()
